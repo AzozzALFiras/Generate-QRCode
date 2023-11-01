@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>QR Code Generator</title>
+<script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
+</head>
+<body>
+<form id="request-form">
+<label for="url">URL:</label>
+<input type="text" id="url" name="url" required><br>
+
+<label for="title">Title:</label>
+<input type="text" id="title" name="title" required><br>
+
+<button type="submit">Generate QR Code</button>
+</form>
+
+<div id="qrcode"></div>
+<script>
+document.getElementById("request-form").addEventListener("submit", function (event) {
+
+event.preventDefault();
+
+// Get the URL and title values from the form
+var url_qrcode = document.getElementById("url").value;
+var title = document.getElementById("title").value;
+// Generate the QR code
+var qrcode = new QRCode(document.getElementById("qrcode"), {
+text: url_qrcode, // Replace with your content
+width: 128, // Adjust the size as needed
+height: 128,
+});
+
+// Convert the QR code to an image (PNG)
+var canvas = document.getElementById("qrcode").getElementsByTagName("canvas")[0];
+var qrCodeImage = canvas.toDataURL("image/png");
+
+// Send the QR code image data to PHP
+fetch('generate_qrcode.php', {
+method: 'POST',
+body: JSON.stringify({ image: qrCodeImage }),
+headers: {
+'Content-Type': 'application/json',
+},
+})
+.then(response => response.text())
+.then(data => {
+// Trigger the download
+var download_img = document.createElement("a");
+var filename = title + ".png";
+download_img.href = data;
+download_img.download = filename;
+download_img.style.display = "none";
+document.body.appendChild(download_img);
+download_img.click();
+document.body.removeChild(download_img);
+console.log(data); // You can handle the PHP response here
+})
+.catch(error => {
+console.error('Error:', error);
+});
+});
+</script>
+</body>
+</html>
